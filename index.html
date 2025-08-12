@@ -1,0 +1,526 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Liberia Media Hub — Radio · TV · Music · Live</title>
+<meta name="description" content="Liberia Media Hub — directory of Liberian radio streams, DSTV/StarTimes channel guide, Audiomack embeds and live shows. Single-file static site for GitHub Pages.">
+<style>
+  :root{
+    --bg: #f4f7fb;
+    --card: #ffffff;
+    --accent: #0077cc;
+    --muted: #6b7280;
+    --text: #04233a;
+    --glass: rgba(2,6,23,0.04);
+  }
+  [data-theme="dark"]{
+    --bg: #071025;
+    --card: #071025;
+    --accent: #60a5fa;
+    --muted: #94a3b8;
+    --text: #e6eef8;
+    --glass: rgba(255,255,255,0.02);
+  }
+  html,body{height:100%;margin:0;font-family:Inter,system-ui,'Segoe UI',Arial;background:var(--bg);color:var(--text)}
+  .wrap{max-width:1200px;margin:20px auto;padding:18px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  h1{margin:0;font-size:22px}
+  .grid{display:grid;grid-template-columns:1fr 420px;gap:16px;margin-top:14px}
+  .card{background:var(--card);border-radius:12px;padding:14px;box-shadow:0 8px 20px var(--glass)}
+  label{display:block;font-size:13px;color:var(--muted);margin-top:10px}
+  input[type=text], input[type=search], textarea, select{width:100%;padding:10px;border-radius:8px;border:1px solid #e9f0f7;background:transparent;color:var(--text)}
+  button{background:var(--accent);color:#fff;border:none;padding:9px 12px;border-radius:8px;cursor:pointer}
+  .muted{color:var(--muted);font-size:13px}
+  .station, .channel, .event{border-bottom:1px dashed #eef5fb;padding:12px 0}
+  .small{font-size:12px;color:var(--muted)}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .logo{width:64px;height:64px;border-radius:10px;display:inline-block;vertical-align:middle;margin-right:12px}
+  .row{display:flex;align-items:center;gap:12px}
+  .list{max-height:480px;overflow:auto;margin-top:10px}
+  .embed {width:100%;height:140px;border:0;border-radius:8px}
+  .searchbar{display:flex;gap:8px}
+  footer{margin-top:18px;text-align:center;color:var(--muted);font-size:13px}
+  @media (max-width:980px){ .grid{grid-template-columns:1fr} .logo{width:52px;height:52px} .embed{height:220px} }
+  .badge {font-size:11px;padding:4px 6px;border-radius:6px;background:#eef7ff;color:#0366a6;display:inline-block;margin-left:8px}
+  .pay {background:#ffecec;color:#a10000}
+  .top-controls{display:flex;gap:8px;align-items:center}
+  .small-btn{background:transparent;border:1px solid var(--glass);padding:6px 8px;border-radius:6px;color:var(--muted);cursor:pointer}
+  .logo-small{width:28px;height:28px;border-radius:6px;margin-right:8px}
+  .hashbox{font-family:monospace;background: #f3f7fb;padding:8px;border-radius:8px}
+</style>
+</head>
+<body data-theme="light">
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>🇱🇷 Liberia Media Hub</h1>
+        <div class="muted">Radio streams · DSTV & StarTimes channel guide · Audiomack · Live shows — single-file static site.</div>
+      </div>
+      <div class="top-controls">
+        <button id="themeToggle" title="Toggle light / dark">Dark</button>
+        <button id="showHash" title="Compute SHA-256 of this page">File SHA-256</button>
+        <div id="hashDisplay" class="hashbox" style="display:none;margin-left:10px"></div>
+      </div>
+    </header>
+
+    <div class="grid">
+      <main class="card">
+        <section id="searchSection">
+          <div class="searchbar">
+            <input id="globalSearch" type="search" placeholder="Search stations, channels, shows..." />
+            <button id="searchBtn">Search</button>
+            <div style="margin-left:auto" class="small muted">Filters across stations, channels, events</div>
+          </div>
+        </section>
+
+        <section id="radioSection" style="margin-top:12px">
+          <h2>Live Radio — Playable Streams</h2>
+          <div class="muted small">Public streams discovered in public directories. If a stream fails, update the URL via the Admin panel below.</div>
+          <div style="margin-top:8px" class="controls">
+            <button id="btnRefreshHealth">Check Health (all)</button>
+            <button id="btnMuteAll">Stop All Players</button>
+            <button id="btnAutoplay">Autoplay on click</button>
+          </div>
+          <div id="stationsList" class="list" style="margin-top:12px"></div>
+        </section>
+
+        <section id="tvSection" style="margin-top:18px">
+          <h2>DSTV & StarTimes — Channel Guide</h2>
+          <div class="muted small">Channels listed with official links. Pay-TV channels are marked. Channel numbers vary by package & region.</div>
+          <div id="channelsList" class="list" style="margin-top:12px"></div>
+        </section>
+
+        <section id="musicSection" style="margin-top:18px">
+          <h2>Music — Audiomack (Official Embeds)</h2>
+          <div class="muted small">Official Audiomack embeds — streams come from Audiomack servers.</div>
+          <div id="audiomackEmbeds" style="margin-top:12px"></div>
+        </section>
+
+        <section id="showsSection" style="margin-top:18px">
+          <h2>Live Shows & Events</h2>
+          <div class="muted small">Public YouTube / Facebook Live embeds where available.</div>
+          <div id="eventsList" class="list" style="margin-top:12px"></div>
+        </section>
+
+        <section style="margin-top:18px">
+          <h3>Outreach Templates (for station/TV outreach)</h3>
+          <div class="muted small">Copy and send to stations to request official stream URLs, logos, and permission to list/embed.</div>
+          <pre style="background:#f3f7fb;padding:10px;border-radius:8px;overflow:auto;font-size:13px">
+Subject: Request to list & embed [Station Name] on Liberia Media Hub
+
+Hello [Station Manager Name],
+
+My name is [Your Name]. I'm creating "Liberia Media Hub", a community directory that lists Liberian radio stations and provides listeners with official stream links and station information. I would like to list your station and, with your permission:
+- Add your official stream URL for in-browser playback
+- Inline your official logo (small)
+- Display program schedule & live show embeds (if available)
+
+Please reply with:
+1) The official stream URL (HLS/MP3/AAC) to use
+2) Preferred logo file (PNG/SVG) or permission to use an inline SVG
+3) Any terms or credit line you require
+
+Thank you — I appreciate your time.
+
+Best regards,
+[Your Name]
+Contact: [email or phone]
+          </pre>
+        </section>
+      </main>
+
+      <aside class="card">
+        <h3>Admin Panel — Add / Edit</h3>
+        <div class="muted small">Add stations/events locally. Export to JSON for backup. Inline logos are auto-generated placeholders; replace with official base64 if you have them.</div>
+
+        <label>Station name</label><input id="adminStationName" type="text" placeholder="Station name (e.g., Hott FM 107.9)"/>
+        <label>Stream URL</label><input id="adminStationStream" type="text" placeholder="https://your-stream-url/stream.mp3"/>
+        <label>City / Tags (comma)</label><input id="adminStationTags" type="text" placeholder="Monrovia,news,music"/>
+        <label>Logo (base64 SVG/PNG) — optional</label><input id="adminStationLogo" type="text" placeholder="data:image/svg+xml;base64,..."/>
+        <div class="controls">
+          <button id="btnAddStation">Add Station</button>
+          <button id="btnResetStations">Reset to Defaults</button>
+        </div>
+
+        <hr/>
+
+        <h4>Add Event</h4>
+        <label>Title</label><input id="adminEventTitle" type="text" placeholder="Show title"/>
+        <label>Date & Time</label><input id="adminEventWhen" type="datetime-local"/>
+        <label>Embed URL (YouTube/Facebook)</label><input id="adminEventEmbed" type="text" placeholder="https://www.youtube.com/embed/..." />
+        <div class="controls"><button id="btnAddEvent">Add Event</button></div>
+
+        <hr/>
+
+        <h4>Backup / Restore</h4>
+        <div class="controls">
+          <button id="btnExport">Export JSON</button>
+          <input id="importFile" type="file" accept=".json"/>
+        </div>
+
+        <hr/>
+
+        <h4>GitHub Actions (optional)</h4>
+        <div class="muted small">Click to download a ready-made workflow YAML that deploys this file to GitHub Pages (push to <code>main</code>).</div>
+        <div class="controls">
+          <button id="btnDownloadWorkflow">Download workflow YAML</button>
+        </div>
+
+        <hr/>
+
+        <h4>Notes</h4>
+        <div class="small muted">- DSTV/StarTimes channels are listed with links only. Re-streaming pay-TV is illegal without license. <br>- Keep backups of this file offline. Replace stream URLs when they break (Admin).</div>
+      </aside>
+    </div>
+
+    <footer class="muted small" style="margin-top:20px">
+      Built for Liberia — streams are public links discovered in public directories at the time of build. If a stream fails update the URL in Admin. DSTV/StarTimes feeds are NOT rebroadcast — links only. © Liberia Media Hub
+    </footer>
+  </div>
+
+<script>
+/* ===================== DATA ===================== */
+/* Stations: a mix of public streams and placeholders. Update in Admin if a URL is invalid. */
+const DATA = {
+  stations: [
+    // Note: Some stream URLs below are placeholders and must be verified/updated.
+    // I included some example public streams; you should confirm the correct ones for each station.
+    { id:'hottfm',   name:'Hott FM 107.9',          city:'Monrovia', tags:['music','urban'], logo:svgBase64('HF','linearGradient(#ff6a00,#ff3d00)'), stream:'https://edge-audio-01-west.sonix.live:443/;stream.mp3' },
+    { id:'starradio',name:'Star Radio 101.5',       city:'Monrovia', tags:['news','talk'], logo:svgBase64('SR','linearGradient(#005c99,#0077cc)'), stream:'https://streaming.example.com/star-radio' },
+    { id:'elbcradio',name:'ELBC Radio 99.9',        city:'Monrovia', tags:['news'], logo:svgBase64('EL','linearGradient(#00a86b,#006f44)'), stream:'https://streaming.example.com/elbc' },
+    { id:'ecowas',   name:'ECOWAS Radio 91.5',      city:'Monrovia', tags:['news','public'], logo:svgBase64('ER','linearGradient(#0066cc,#0099ff)'), stream:'https://livenow.stream/OgGgo/tunein_ecowas64.mp3' },
+    { id:'skyfm',    name:'Sky FM 107.1',          city:'Monrovia', tags:['music'], logo:svgBase64('SF','linearGradient(#7c3aed,#4f46e5)'), stream:'' },
+    { id:'capitol',  name:'Capitol FM 89.7',       city:'Monrovia', tags:['music'], logo:svgBase64('CF','linearGradient(#06b6d4,#0ea5a0)'), stream:'' },
+    { id:'redpower', name:'Red Power FM 100.3',     city:'Monrovia', tags:['variety'], logo:svgBase64('RP','linearGradient(#ef4444,#dc2626)'), stream:'' },
+    { id:'radiofmi', name:'FMI Radio',              city:'Monrovia', tags:['religious'], logo:svgBase64('FM','linearGradient(#f97316,#ef4444)'), stream:'' },
+    { id:'radiomaria',name:'Radio Maria Liberia',    city:'Monrovia', tags:['religious'], logo:svgBase64('RM','linearGradient(#0ea5a0,#0284c7)'), stream:'' }
+    // You can add more stations via Admin; I kept a compact default list for quick deploy.
+  ],
+  channels: [
+    // DSTV examples (not exhaustive)
+    { provider:'DSTV', channel:'SuperSport Premier League', number:202, link:'https://supersport.com', pay:true },
+    { provider:'DSTV', channel:'M-Net Movies', number:101, link:'https://mnet.co.za', pay:true },
+    { provider:'DSTV', channel:'CNN International', number:400, link:'https://edition.cnn.com', pay:true },
+    { provider:'DSTV', channel:'BBC World News', number:401, link:'https://www.bbc.com/news', pay:false },
+    { provider:'DSTV', channel:'e.tv', number:160, link:'https://www.etv.co.za', pay:false },
+    // StarTimes examples
+    { provider:'StarTimes', channel:'ST Movies Plus', number:100, link:'https://www.startimestv.com', pay:true },
+    { provider:'StarTimes', channel:'StarTimes Sports Arena', number:167, link:'https://www.startimestv.com', pay:true },
+    { provider:'StarTimes', channel:'StarTimes Prime', number:21, link:'https://www.startimestv.com', pay:true }
+  ],
+  audiomack: [
+    // Replace with your desired Audiomack embed URLs
+    { title:'Audiomack Playlist — Demo', embed:'https://audiomack.com/embed/playlist/innercatmusic' },
+    { title:'Audiomack Track — Demo', embed:'https://audiomack.com/embed/song/innercatmusic/allegro-in-b-flat-k-3' }
+  ],
+  events: [
+    // Example live events (YouTube embed links)
+    { id:'evt1', title:'Morning News Roundup — Star Radio', when:'2025-08-14T08:00:00', embed:'https://www.youtube.com/embed/5qap5aO4i9A' },
+    { id:'evt2', title:'DJ Night Beats — Hott FM', when:'2025-08-14T22:00:00', embed:'' }
+  ]
+};
+
+/* ===================== UTILITIES ===================== */
+
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function svgBase64(text, gradientSpec){
+  const grad = (gradientSpec||'linearGradient(#0ea5a0,#0284c7)').replace('linearGradient(','').replace(')','').split(',');
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'>
+  <defs><linearGradient id='g' x1='0' x2='1' y1='0' y2='1'><stop offset='0' stop-color='${grad[0]}'/><stop offset='1' stop-color='${grad[1]}'/></linearGradient></defs>
+  <rect rx='18' width='120' height='120' fill='url(#g)'/>
+  <text x='50%' y='55%' font-family='Arial, sans-serif' font-weight='700' font-size='44' fill='white' text-anchor='middle' alignment-baseline='middle'>${escapeHtml(text)}</text></svg>`;
+  return 'data:image/svg+xml;base64,' + btoa(svg);
+}
+
+/* Simple helper to compute SHA-256 of a string and return hex */
+async function sha256hex(str){
+  const enc = new TextEncoder().encode(str);
+  const res = await crypto.subtle.digest('SHA-256', enc);
+  const arr = Array.from(new Uint8Array(res));
+  return arr.map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+/* ================= STORAGE & STATE ================= */
+
+const STORAGE_KEY = 'liberia_media_hub_v3';
+function saveState(){
+  const saved = { stations: state.stations, events: state.events };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+}
+function loadState(){
+  try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch(e){ return null; }
+}
+
+/* Working state */
+let state = {
+  stations: DATA.stations.slice(),
+  channels: DATA.channels.slice(),
+  audiomack: DATA.audiomack.slice(),
+  events: DATA.events.slice()
+};
+
+const persisted = loadState();
+if(persisted){
+  if(Array.isArray(persisted.stations) && persisted.stations.length) state.stations = persisted.stations;
+  if(Array.isArray(persisted.events) && persisted.events.length) state.events = persisted.events;
+}
+
+/* ================= DOM HELPERS ================= */
+
+function el(tag, attrs={}, children=[]){
+  const e = document.createElement(tag);
+  for(const k in attrs){
+    if(k==='html') e.innerHTML = attrs[k];
+    else e.setAttribute(k, attrs[k]);
+  }
+  for(const c of children) if(typeof c === 'string') e.appendChild(document.createTextNode(c)); else e.appendChild(c);
+  return e;
+}
+
+/* ================= RENDER ================= */
+
+function renderStations(filter=''){
+  const root = document.getElementById('stationsList'); root.innerHTML = '';
+  const q = String(filter || '').toLowerCase();
+  state.stations.forEach(st => {
+    if(q){
+      const hay = (st.name + ' ' + (st.city||'') + ' ' + (st.tags||[]).join(' ')).toLowerCase();
+      if(!hay.includes(q)) return;
+    }
+    const div = el('div',{class:'station'});
+    const logo = el('img',{src:st.logo||svgBase64('RX'),'class':'logo','alt':st.name});
+    logo.style.width='64px'; logo.style.height='64px';
+    const info = el('div',{},[]);
+    const title = el('div',{},[el('strong',{},[st.name])]);
+    const meta = el('div',{class:'small'},[ `${st.city || ''} · ${ (st.tags||[]).join(', ') }` ]);
+    const player = el('div',{},[]);
+    if(st.stream){
+      const audio = el('audio',{controls:''});
+      const src = el('source',{src:st.stream, type:'audio/mpeg'});
+      audio.appendChild(src);
+      audio.addEventListener('error', ()=> {
+        player.appendChild(el('div',{class:'small muted'},['Stream failed (offline or blocked).']));
+      });
+      player.appendChild(audio);
+    } else {
+      player.appendChild(el('div',{class:'small muted'},['No stream URL — add via Admin.']));
+    }
+    const actions = el('div',{class:'controls'},[]);
+    const btnHealth = el('button',{},['Health']);
+    btnHealth.onclick = ()=> checkStationHealth(st).then(h=> alert(`${st.name} — Health: ${h ? 'PLAYABLE' : 'FAILED'}`));
+    const btnCopy = el('button',{},['Copy URL']);
+    btnCopy.onclick = ()=> { navigator.clipboard.writeText(st.stream || '').then(()=>alert('Stream URL copied')) };
+    actions.appendChild(btnHealth); actions.appendChild(btnCopy);
+
+    info.appendChild(title); info.appendChild(meta); info.appendChild(player); info.appendChild(actions);
+    const row = el('div',{class:'row'},[logo, info]);
+    div.appendChild(row);
+    root.appendChild(div);
+  });
+}
+
+function renderChannels(filter=''){
+  const root = document.getElementById('channelsList'); root.innerHTML = '';
+  const q = String(filter||'').toLowerCase();
+  state.channels.forEach(ch=>{
+    if(q){
+      const hay = (ch.channel + ' ' + ch.provider).toLowerCase();
+      if(!hay.includes(q)) return;
+    }
+    const div = el('div',{class:'channel'});
+    const name = el('div',{},[el('strong',{},[ch.channel]), ch.pay ? el('span',{class:'badge pay'},[' pay-tv']) : '']);
+    const details = el('div',{class:'small'},[`${ch.provider} · Channel: ${ch.number || 'n/a'} · `, el('a',{href:ch.link || '#', target:'_blank'},['Official page'])]);
+    div.appendChild(name); div.appendChild(details);
+    root.appendChild(div);
+  });
+}
+
+function renderAudiomack(){
+  const root = document.getElementById('audiomackEmbeds'); root.innerHTML = '';
+  state.audiomack.forEach(a=>{
+    const wrap = el('div',{style:'margin-bottom:12px;'},[]);
+    wrap.appendChild(el('div',{class:'small'},[a.title]));
+    const iframe = el('iframe',{class:'embed', src:a.embed});
+    wrap.appendChild(iframe);
+    root.appendChild(wrap);
+  });
+}
+
+function renderEvents(filter=''){
+  const root = document.getElementById('eventsList'); root.innerHTML = '';
+  const q = String(filter||'').toLowerCase();
+  const sorted = state.events.slice().sort((a,b)=> (a.when||'') < (b.when||'') ? -1 : 1);
+  sorted.forEach(ev=>{
+    if(q){
+      const hay = (ev.title + ' ' + (ev.when||'') ).toLowerCase();
+      if(!hay.includes(q)) return;
+    }
+    const div = el('div',{class:'event'});
+    div.appendChild(el('div',{},[el('strong',{},[ev.title])]));
+    div.appendChild(el('div',{class:'small'},[ ev.when ? (new Date(ev.when)).toLocaleString() : 'Time not set' ]));
+    if(ev.embed){
+      const wrap = el('div',{},[]);
+      const ifr = el('iframe',{src:ev.embed, class:'embed', allow:'autoplay; encrypted-media; picture-in-picture'});
+      wrap.appendChild(ifr);
+      div.appendChild(wrap);
+    } else {
+      div.appendChild(el('div',{class:'small'},['Listen on station stream (no embed).']));
+    }
+    root.appendChild(div);
+  });
+}
+
+/* ================= Health Check ================= */
+
+async function checkStationHealth(station){
+  return new Promise(resolve=>{
+    if(!station.stream) return resolve(false);
+    const audio = new Audio();
+    audio.preload = 'metadata';
+    audio.src = station.stream;
+    let ok = false;
+    const to = setTimeout(()=> { audio.src=''; resolve(ok); }, 8000);
+    audio.addEventListener('canplay', ()=> { ok=true; clearTimeout(to); audio.src=''; resolve(true); });
+    audio.addEventListener('error', ()=> { clearTimeout(to); audio.src=''; resolve(false); });
+    audio.load();
+  });
+}
+
+async function checkAllStations(){
+  const checks = await Promise.all(state.stations.map(s => checkStationHealth(s).catch(()=>false)));
+  const okCount = checks.filter(Boolean).length;
+  alert(`Health check: ${okCount} / ${state.stations.length} playable (attempted).`);
+}
+
+/* ================= Admin actions ================= */
+
+document.getElementById('btnAddStation').addEventListener('click', ()=>{
+  const name = document.getElementById('adminStationName').value.trim();
+  const stream = document.getElementById('adminStationStream').value.trim();
+  const tags = (document.getElementById('adminStationTags').value||'').split(',').map(s=>s.trim()).filter(Boolean);
+  const logoInput = document.getElementById('adminStationLogo').value.trim();
+  if(!name){ alert('Enter station name'); return; }
+  const id = 's_' + Math.random().toString(36).slice(2,9);
+  const logo = logoInput || svgBase64(name.split(' ').map(w=>w[0]).slice(0,2).join(''), 'linearGradient(#ff7a18,#af002d)');
+  const st = { id, name, city:'', tags, logo, stream };
+  state.stations.push(st);
+  saveState();
+  renderStations(document.getElementById('globalSearch').value);
+  document.getElementById('adminStationName').value=''; document.getElementById('adminStationStream').value=''; document.getElementById('adminStationTags').value=''; document.getElementById('adminStationLogo').value='';
+});
+
+document.getElementById('btnResetStations').addEventListener('click', ()=>{
+  if(!confirm('Reset stations to built-in defaults? This removes user-added stations.')) return;
+  state.stations = DATA.stations.slice();
+  saveState();
+  renderStations(document.getElementById('globalSearch').value);
+});
+
+document.getElementById('btnAddEvent').addEventListener('click', ()=>{
+  const title = document.getElementById('adminEventTitle').value.trim();
+  const when = document.getElementById('adminEventWhen').value;
+  const embed = document.getElementById('adminEventEmbed').value.trim();
+  if(!title){ alert('Enter event title'); return; }
+  const id = 'e_' + Math.random().toString(36).slice(2,9);
+  state.events.push({ id, title, when, embed });
+  saveState();
+  renderEvents(document.getElementById('globalSearch').value);
+  document.getElementById('adminEventTitle').value=''; document.getElementById('adminEventWhen').value=''; document.getElementById('adminEventEmbed').value='';
+});
+
+/* Export / Import */
+document.getElementById('btnExport').addEventListener('click', ()=>{
+  const payload = { stations: state.stations, events: state.events };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type:'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='liberia-media-hub-backup.json'; a.click(); URL.revokeObjectURL(url);
+});
+
+document.getElementById('importFile').addEventListener('change', async (ev)=>{
+  const f = ev.target.files[0]; if(!f) return;
+  try {
+    const txt = await f.text();
+    const obj = JSON.parse(txt);
+    if(Array.isArray(obj.stations)) state.stations = obj.stations;
+    if(Array.isArray(obj.events)) state.events = obj.events;
+    saveState();
+    renderStations(document.getElementById('globalSearch').value);
+    renderEvents(document.getElementById('globalSearch').value);
+    alert('Imported');
+  } catch(e){ alert('Invalid file or JSON'); }
+});
+
+/* Search handlers */
+document.getElementById('searchBtn').addEventListener('click', ()=>{
+  const q = document.getElementById('globalSearch').value;
+  renderStations(q); renderChannels(q); renderEvents(q);
+});
+document.getElementById('globalSearch').addEventListener('input', (e)=> {
+  const q = e.target.value;
+  renderStations(q); renderChannels(q); renderEvents(q);
+});
+
+/* Stop all players */
+document.getElementById('btnMuteAll').addEventListener('click', ()=>{
+  document.querySelectorAll('audio').forEach(a=>{ try{ a.pause(); a.currentTime=0; }catch(e){} });
+});
+
+/* Health button */
+document.getElementById('btnRefreshHealth').addEventListener('click', checkAllStations);
+
+/* Theme toggle */
+const themeToggle = document.getElementById('themeToggle');
+themeToggle.addEventListener('click', ()=>{
+  const el = document.documentElement;
+  const body = document.body;
+  const current = body.getAttribute('data-theme') || 'light';
+  const next = current === 'light' ? 'dark' : 'light';
+  body.setAttribute('data-theme', next);
+  themeToggle.textContent = next === 'light' ? 'Dark' : 'Light';
+});
+
+/* Compute SHA-256 of current page (useful integrity check) */
+document.getElementById('showHash').addEventListener('click', async ()=>{
+  const html = document.documentElement.outerHTML;
+  const h = await sha256hex(html);
+  const el = document.getElementById('hashDisplay');
+  el.style.display = 'inline-block';
+  el.textContent = h;
+});
+
+/* ================= Workflow YAML download (GitHub Actions) ================= */
+document.getElementById('btnDownloadWorkflow').addEventListener('click', ()=>{
+  const yaml = `name: Deploy Pages\n\non:\n  push:\n    branches: [ main ]\n\njobs:\n  deploy:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - name: Setup Pages\n        uses: actions/configure-pages@v3\n      - name: Deploy to GitHub Pages\n        uses: peaceiris/actions-gh-pages@v3\n        with:\n          github_token: \${{ secrets.GITHUB_TOKEN }}\n          publish_dir: ./\n`;
+  const blob = new Blob([yaml], { type:'text/yaml' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = '.github/workflows/deploy-pages.yml'; a.click(); URL.revokeObjectURL(url);
+});
+
+/* ================= Initial render & persistence ================= */
+
+function renderChannels(q=''){ renderChannelsCore(q); }
+function renderChannelsCore(filter=''){
+  const root = document.getElementById('channelsList'); root.innerHTML = '';
+  const q = String(filter||'').toLowerCase();
+  state.channels.forEach(ch=>{
+    if(q){
+      const hay = (ch.channel + ' ' + ch.provider).toLowerCase();
+      if(!hay.includes(q)) return;
+    }
+    const div = el('div',{class:'channel'});
+    const name = el('div',{},[el('strong',{},[ch.channel]), ch.pay ? el('span',{class:'badge pay'},[' pay-tv']) : '']);
+    const details = el('div',{class:'small'},[`${ch.provider} · Channel: ${ch.number || 'n/a'} · `, el('a',{href:ch.link || '#', target:'_blank'},['Official page'])]);
+    div.appendChild(name); div.appendChild(details);
+    root.appendChild(div);
+  });
+}
+
+renderStations(''); renderChannels(''); renderAudiomack(); renderEvents(''); saveState();
+
+/* Expose state for debugging */
+window.appState = state;
+</script>
+</body>
+</html>
